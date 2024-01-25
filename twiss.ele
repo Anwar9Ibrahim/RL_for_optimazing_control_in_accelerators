@@ -1,0 +1,40 @@
+&divide_elements
+    name = *
+    maximum_length = 0.05
+&end
+
+&run_setup
+    lattice = machine.lte
+    magnets = results/beamline.mag
+    parameters = results/beamline.par
+    p_central_mev = 400.0
+    use_beamline = machine
+    default_order = 2
+&end
+
+!&load_parameters
+!    filename = parameters2load.sdds
+!    change_defined_values = 1
+!    verbose = 1
+!    allow_missing_files = 1  
+!&end
+
+&twiss_output
+    filename = results/twiss.twi
+    matched = 0
+    beta_x  =  2.0
+    beta_y  =  2.0
+&end
+
+&floor_coordinates
+    filename = results/xyz.sdds
+    include_vertices = 0
+    vertices_only = 0
+    magnet_centers = 0
+&end
+
+&run_control &end
+
+&bunched_beam &end
+
+&track &end

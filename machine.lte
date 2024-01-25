@@ -1,0 +1,82 @@
+! Comments go after "!"
+
+!q: charge,total=3.2e-9
+q: charge,total=5.4e-10
+
+w1: watch,filename="results/w1.sdds",mode=coord
+w2: watch,filename="results/w2.sdds",mode=coord
+w3: watch,filename="results/w3.sdds",mode=coord
+w4: watch,filename="results/w4.sdds",mode=coord
+w5: watch,filename="results/w5.sdds",mode=coord
+w6: watch,filename="results/w6.sdds",mode=coord
+w7: watch,filename="results/w7.sdds",mode=coord
+w8: watch,filename="results/w8.sdds",mode=coord
+
+MA:     MAXAMP, X_MAX=1.0e-2, Y_MAX=1.0e-2, ELLIPTICAL=1
+
+!POSITRON INJECTION
+
+Q1L0:  QUAD,L=0.18, K1=-9.473, HKICK=0, VKICK=0
+Q1L1:  QUAD,L=0.18, K1=13.684, HKICK=0, VKICK=0
+
+Q1L10: QUAD,L=0.18, K1=-5.263, HKICK=0, VKICK=0
+Q1L2:  QUAD,L=0.18, K1=13.684, HKICK=0, VKICK=0
+Q1L3:  QUAD,L=0.18, K1=-5.263, HKICK=0, VKICK=0
+Q1L4:  QUAD,L=0.18, K1=7.368, HKICK=0, VKICK=0
+Q1L7:  QUAD,L=0.18, K1=-6.77, HKICK=0, VKICK=0
+Q1L8:  QUAD,L=0.18, K1=7.294, HKICK=0, VKICK=0
+Q1L9:  QUAD,L=0.18, K1=7.368, HKICK=0, VKICK=0
+
+BM1:    SBEND,  L=0.87808,      ANGLE=+0.785398, FSE=-0.006315
+BM2:    SBEND,  L=0.87808,      ANGLE=+0.785398, FSE=-0.0001
+BM3:    SBEND,  L=0.87808,      ANGLE=-0.785398, FSE=0.0001
+BM4:    SBEND,  L=0.87808,      ANGLE=-0.785398, FSE=-5e-05
+
+LL0L1:  DRIFT,  L=0.12
+LL1M1:  DRIFT,  L=0.14
+LM1L2:  DRIFT,  L=0.305
+LL2M2:  DRIFT,  L=0.305
+LM2L3:  DRIFT,  L=0.225
+LL3L4:  DRIFT,  L=0.815
+LL4L5:  DRIFT,  L=0.815
+LL5M3:  DRIFT,  L=0.225
+LM3L6:  DRIFT,  L=0.305
+LL6M4:  DRIFT,  L=0.305
+LM4L7:  DRIFT,  L=0.24
+LL7L8:  DRIFT,  L=0.14
+LDB:    DRIFT,  L=0.3214
+LL9L10: DRIFT,  L=0.14
+
+DP0:    DRIFT,  L=1.9081
+
+!LM01L0: DRIFT,  L=0.285
+LM01L0: DRIFT,  L=1.0
+
+!LL10M5: DRIFT,  L=0.24
+LL10M5: DRIFT,  L=1.0
+LM5M6:  DRIFT,  L=0.99574
+
+!Apertures:
+MMK: MAXAMP,	X_MAX = 0.012,	Y_MAX = 0.037
+MBH: MAXAMP,	X_MAX = 0.035,	Y_MAX = 0.0123,	ELLIPTICAL=1
+MBV: MAXAMP,	X_MAX = 0.0123,	Y_MAX = 0.035,	ELLIPTICAL=1
+ML:  MAXAMP,	X_MAX = 0.025,	Y_MAX = 0.025,	ELLIPTICAL=1
+MS1: MAXAMP,	X_MAX = 0.0125,	Y_MAX = 0.0125,	ELLIPTICAL=1
+
+!Accelerating structure:
+RFCavity_d: rfca,freq=2856e6,l=0.03498,volt=-4.46e5, phase=0, change_p0=1
+
+Debuncher: line=(43*RFCavity_d)
+
+MA2:    MAXAMP, X_MAX=10.0e-2, Y_MAX=10.0e-2, ELLIPTICAL=1
+
+!PositronLine:
+
+PInject: LINE=(LM01L0,Q1L0,LL0L1,Q1L1,LL1M1)
+PTurn:  LINE=(MBH,BM1,ML,LM1L2,Q1L2,LL2M2,MBH,BM2,ML,LM2L3,Q1L3,LL3L4,w2,Q1L4,LL4L5,Q1L3,LL5M3,MBH,BM3,ML,LM3L6,Q1L2,LL6M4,MBH,BM4,ML)
+
+Debuncher_line:        LINE=(LM4L7,Q1L7,LL7L8,Q1L4,LDB,MA,Debuncher,ML,LDB,Q1L9,LL9L10,Q1L10,LL10M5,MBV)
+
+PositronLine:   LINE=(PInject,PTurn,Debuncher_line)
+
+machine: LINE = (q,w1,MA2,PositronLine,w3)
