@@ -9,6 +9,7 @@ from IPython.display import Image
 from io import StringIO
 from bokeh.models import HoverTool
 import os
+import subprocess
 
 
 hv.extension("bokeh")
