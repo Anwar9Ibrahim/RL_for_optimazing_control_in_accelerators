@@ -1,22 +1,23 @@
-#import libraries
 import numpy as np
 import pandas as pd
 import holoviews as hv
 import os, glob
 from IPython.display import Latex
 from IPython.display import Image
-
+import time
 from io import StringIO
 from bokeh.models import HoverTool
 import os
-import subprocess
 
 
 hv.extension("bokeh")
+import subprocess
 
-"""%opts Curve Spread [width=700 height=300 show_grid=True \
-            default_tools=['box_zoom','pan','wheel_zoom','reset']]
-"""
+
+"""subprocess.run(["mpirun", "-n", "10", "Pelegant", "track.ele", "/b"], stdout=subprocess.PIPE)
+result= subprocess.run(["sdds2stream", "results/beamline.mag", "-col=ElementName,s,Profile", "-pipe=out", "/b"], stdout= subprocess.PIPE)
+print(result.stdout)"""
+
 
 class elegantWrapper:
     def __init__(self):
@@ -39,13 +40,13 @@ class elegantWrapper:
 
     #to add some lines to the input file this is will help us get the output
     def process_w(self, input_w, output_w="results/w.sdds", z0=0):
-        !sddsprocess $input_w $output_w \
-            "-define=col,x_mm,x 1e3 *,symbol=x,units=mm" \
-            "-define=col,y_mm,y 1e3 *,symbol=x,units=mm" \
-            "-define=col,z_mm,t c_mks * -1 * $z0 + 1e3 *,symbol=z,units=mm" \
-            "-define=col,xp_mrad,xp 1e3 *,symbol=x',units=mrad" \
-            "-define=col,yp_mrad,yp 1e3 *,symbol=y',units=mrad" \
-            "-define=col,E_GeV,p 0.511e-3 *,symbol=E,units=GeV"
+        subprocess.run(["sddsprocess", input_w, output_w ,\
+            "-define=col,x_mm,x 1e3 *,symbol=x,units=mm" ,\
+            "-define=col,y_mm,y 1e3 *,symbol=x,units=mm",\
+            "-define=col,z_mm,t c_mks * -1 * $z0 + 1e3 *,symbol=z,units=mm", \
+            "-define=col,xp_mrad,xp 1e3 *,symbol=x',units=mrad", \
+            "-define=col,yp_mrad,yp 1e3 *,symbol=y',units=mrad", \
+            "-define=col,E_GeV,p 0.511e-3 *,symbol=E,units=GeV", "/b"],stdout=subprocess.PIPE)
     
     #print the input files to check our input this is a void function
     def printInputFiles(self):
@@ -68,40 +69,43 @@ class elegantWrapper:
     #run simulation outputs a dataframe this is for the RL optimization code
     def runSimulation(self):        
         #!!! keep in mind that here we are passing the name of the input file statically
-        !elegant track.ele
+        #!elegant track.ele
+        subprocess.run(["mpirun", "-n", "10", "Pelegant", "track.ele", "/b"], stdout=subprocess.PIPE)
         self.observation= self.createObservation()
         return self.observation 
 
     #simulation for 1D scan is a void function    
     def simulateFor1Dscan(self):
-        !elegant track.ele
+        subprocess.run(["mpirun", "-n", "10", "Pelegant", "track.ele", "/b"], stdout=subprocess.PIPE)
+        #!elegant track.ele
     
     def process_toStream(self, input="results/w1.sdds"):
-        self.s= !sdds2stream $input -par=s
+        #self.s= !sdds2stream $input -par=s
+        self.s=subprocess.run(["sdds2stream", input,"-par=s", "/b"],stdout=subprocess.PIPE)
         return float(self.s[0])
         
     #plots the particles positions on a vertical cut on the line 
     def visualizeXY(self):
-        !sddsplot -lay=2,2 -device=lpng -output=$self.png "-title=" \
-        -col=x_mm,y_mm -graph=dot,type=2 $self.w -endPanel \
-        -col=yp_mrad,y_mm -graph=dot,type=2 $self.w -endPanel \
-        -col=x_mm,xp_mrad -graph=dot,type=2  $self.w -endPanel \
-        -col=yp_mrad,xp_mrad -graph=dot,type=2 $self.w
+        subprocess.run(["sddsplot", "-lay=2,2", "-device=lpng", "-output=",self.png ,"-title=", \
+        "-col=x_mm,y_mm", "-graph=dot,type=2", self.w ,"-endPanel", \
+        "-col=yp_mrad,y_mm", "-graph=dot,type=2", self.w ,"-endPanel", \
+        "-col=x_mm,xp_mrad"," -graph=dot,type=2" , self.w, "-endPanel" ,\
+        "-col=yp_mrad,xp_mrad", "-graph=dot,type=2" ,self.w, "/b"], stdout=subprocess.PIPE)
         return(self.png)
 
     
     #plots the energy of the particles a vertical cut on the line 
     def visualizeE(self):
-        !sddsplot -device=lpng -output=$self.png -lay=2,2 "-title=" \
-        -col=z_mm,E_GeV -graph=dot,type=2 $self.w -endPanel \
-        -col=xp_mrad,E_GeV -graph=dot,type=2 $self.w -endPanel \
-        -col=z_mm,x_mm -graph=dot,type=2 $self.w -endPanel \
-        -col=xp_mrad,x_mm -graph=dot,type=2 $self.w
+        subprocess.run(["sddsplot", "-device=lpng", "-output=",self.png," -lay=2,2", "-title=" \
+        "-col=z_mm,E_GeV", "-graph=dot,type=2", self.w ,"-endPanel", \
+        "-col=xp_mrad,E_GeV", "-graph=dot,type=2", self.w," -endPanel", \
+        "-col=z_mm,x_mm", "-graph=dot,type=2", self.w," -endPanel", \
+        "-col=xp_mrad,x_mm", "-graph=dot,type=2", self.w, "/b"], stdout=subprocess.PIPE)
         return(self.png)
 
     #PostProcessing
     def analyzeBeamlineMagnets(self):
-        out= !sdds2stream results/beamline.mag -col=ElementName,s,Profile -pipe=out
+        out= subprocess.run(["sdds2stream", "results/beamline.mag", "-col=ElementName,s,Profile", "-pipe=out", "/b"], stdout=subprocess.PIPE)
 
         DATA = StringIO("\n".join(out))
         df = pd.read_csv(DATA, names=['ElementName', 's', 'Profile'], delim_whitespace=True)
@@ -109,7 +113,7 @@ class elegantWrapper:
     
     #get and analyze the output file track.sig 
     def analyzeTrackSig(self):
-        out = !sdds2stream results/track.sig -col=ElementName,s,minimum1,maximum1,minimum3,maximum3,Sx,Sy -pipe=out
+        out = subprocess.run(["sdds2stream", "results/track.sig", "-col=ElementName,s,minimum1,maximum1,minimum3,maximum3,Sx,Sy", "-pipe=out", "b"], stdout=subprocess.PIPE)
         DATA = StringIO("\n".join(out))
         df = pd.read_csv(DATA, names=['ElementName','s','xmin','xmax','ymin','ymax','sigma_x','sigma_y'],
                         delim_whitespace=True)
@@ -121,7 +125,7 @@ class elegantWrapper:
 
     #get and analyze the output file track.cen
     def analyzeTrackCen(self):
-        out = !sdds2stream results/track.cen -col=ElementName,s,Particles,pCentral,Cx,Cy,Charge -pipe=out
+        out = subprocess.run(["sdds2stream", "results/track.cen", "-col=ElementName,s,Particles,pCentral,Cx,Cy,Charge", "-pipe=out", "/b"], stdout= subprocess.PIPE)
         DATA = StringIO("\n".join(out))
         self.df_cen = pd.read_csv(DATA, names=['ElementName','s','Particles','p','Cx','Cy','Charge'],
                         delim_whitespace=True)
@@ -133,8 +137,8 @@ class elegantWrapper:
 
     #get and analyze the output file twiss.twi
     def analyzeTwissSddd(self):
-        out = !sdds2stream results/twiss.twi \
-            -col=ElementName,s,betax,betay,alphax,alphay,etax,etay,pCentral0,xAperture,yAperture -pipe=out
+        out = subprocess.run(["sdds2stream", "results/twiss.twi", \
+            "-col=ElementName,s,betax,betay,alphax,alphay,etax,etay,pCentral0,xAperture,yAperture", "-pipe=out","/b"], stdout=subprocess.PIPE)
         DATA = StringIO("\n".join(out))
         self.df_twi = pd.read_csv(DATA, names=['ElementName','s','betax','betay','alphax','alphay',
                                     'etax','etay','p','xAperture','yAperture'],
